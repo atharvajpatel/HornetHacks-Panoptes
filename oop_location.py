@@ -60,7 +60,7 @@ class Drone:
         
         for ads in defense_systems:
             distance_to_danger, bearing = self._calculate_distance_and_bearing(ads)
-            
+              
             # Update nearest ADS if this is the closest one
             if distance_to_danger < closest_distance:
                 closest_distance = distance_to_danger
@@ -135,7 +135,7 @@ class DefenseMap:
                     print(f"{threat_name}:")
                     print(f"  Distance To Danger Zone: {data['distance_to_danger']:.2f} Units")
                     print(f"  Bearing: {data['bearing']:.2f}° ({Drone.get_cardinal_direction(data['bearing'])})")
-                    print("  Status: INSIDE DANGER ZONE!" if data['status'] else "  Status: OUTSIDE DANGER ZONE!")
+                    print("  Status: INSIDE DANGER ZONE!" if data['status'] else "  Status: OUTSIDE DANGER ZONE!")  
             
             time.sleep(5)
 
