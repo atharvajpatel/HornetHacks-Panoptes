@@ -1,0 +1,28 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+    <!-- Coordinate system -->
+    <line x1="50" y1="350" x2="350" y2="350" stroke="black" stroke-width="2"/>
+    <line x1="200" y1="50" x2="200" y2="350" stroke="black" stroke-width="2"/>
+    
+    <!-- Unit sphere -->
+    <circle cx="200" cy="200" r="150" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="5,5"/>
+    
+    <!-- Point on sphere -->
+    <circle cx="300" cy="150" r="5" fill="red"/>
+    
+    <!-- Projection lines -->
+    <line x1="200" y1="200" x2="300" y2="150" stroke="blue" stroke-width="2"/>
+    <line x1="300" y1="150" x2="300" y2="200" stroke="green" stroke-width="1" stroke-dasharray="4,4"/>
+    <line x1="200" y1="200" x2="300" y2="200" stroke="green" stroke-width="1" stroke-dasharray="4,4"/>
+    
+    <!-- Angle arc -->
+    <path d="M 220 200 A 20 20 0 0 0 217 180" fill="none" stroke="purple" stroke-width="2"/>
+    
+    <!-- Labels -->
+    <text x="360" y="350" font-size="16">x</text>
+    <text x="190" y="40" font-size="16">z</text>
+    <text x="310" y="140" font-size="16">P(x,y,z)</text>
+    <text x="220" y="190" font-size="16">φ</text>
+    <text x="250" y="250" font-size="16">r=1</text>
+    <text x="320" y="180" font-size="12">lat = π/2 - φ</text>
+    <text x="240" y="220" font-size="12">lon = atan2(y,x)</text>
+</svg>
