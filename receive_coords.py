@@ -2,7 +2,7 @@ import serial
 
 class ReceiveCoords:
     def __init__(self):
-        self.port = serial.Serial("10.33.0.210", baudrate=115200, timeout=3.0)
+        self.port = serial.Serial("/dev/ttyAMA0", baudrate=115200, timeout=3.0)
         self.lat = 0.0
         self.lon = 0.0
         self.alt = 0.0
