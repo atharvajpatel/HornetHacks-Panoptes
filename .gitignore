@@ -77,3 +77,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+Apikey_Astro = "tptrumddbxbjuehp"
+
+# Virtual Envs
+exenv

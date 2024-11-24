@@ -1,6 +1,7 @@
 transformers
 matplotlib
 pillow
+cv2
 astropy
 numpy
 datetime
