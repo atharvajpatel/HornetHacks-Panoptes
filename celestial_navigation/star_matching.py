@@ -41,6 +41,11 @@ class Sagittarius:
 sgr = Sagittarius()
 
 
+
+
+
+# using the direction and distance directions
+
 def draw_constellation_on_image(image, stars, constellation):
     """
     Draws the Sagittarius constellation on top of the provided image.

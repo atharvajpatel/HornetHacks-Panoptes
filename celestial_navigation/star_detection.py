@@ -10,7 +10,7 @@ def detection(image_path):
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Set a threshold for brightness (here, set it to 150). originally 
-    ret, new = cv2.threshold(img_gray, 150, 255, cv2.THRESH_BINARY)
+    ret, new = cv2.threshold(img_gray, 100, 255, cv2.THRESH_BINARY)
 
     # The image is made up of white dots on a black background, so the outlines of the white dots are detected.
     #detected_image, 
@@ -38,5 +38,5 @@ def detection(image_path):
     cv2.imshow("Image with Contours", img_with_contours)
     cv2.waitKey(0) # press 0 to exit
     cv2.destroyAllWindows()
-    return stars
+    return img_with_contours, stars
 
