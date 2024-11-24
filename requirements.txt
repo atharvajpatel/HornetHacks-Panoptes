@@ -1,11 +1,11 @@
 transformers
 matplotlib
 pillow
-cv2
+opencv-python
 astropy
 numpy
 datetime
 ephem
 pandas
-sklearn
+scikit-learn
 astroquery
