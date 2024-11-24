@@ -144,9 +144,6 @@ print(eve)
 # print(len(eve.radio_signals[0]))
 
 
-
-
-
 import matplotlib.pyplot as plt
 
 def plot(person):
@@ -172,42 +169,6 @@ plot(eve)
 
 # right now the plot only shows one by one. probably overlay them soon
 
-
-# def create_enemy_signal():
-#     fs = 1e6  # Sampling frequency (Hz)
-#     T = 1e-3  # Pulse duration (s)
-#     f_start = 77e9  # Start frequency (Hz)
-#     f_end = 77.5e9  # End frequency (Hz)
-#     t = np.linspace(0, T, int(fs*T))
-
-#     # Generate chirp
-#     chirp_signal = np.sin(2 * np.pi * (f_start * t + 0.5 * (f_end - f_start) / T * t**2))
-
-#     # Plot
-#     plt.plot(t, chirp_signal)
-#     plt.xlabel("Time (s)")
-#     plt.ylabel("Amplitude")
-#     plt.title("Chirp Signal")
-#     plt.show()
-#     pass
-
-# def create_ally_signal():
-#     fs = 1e6  # Sampling frequency (Hz)
-#     T = 1e-3  # Pulse duration (s)
-#     f_start = 79e9  # Start frequency (Hz)
-#     f_end = 78.5e9  # End frequency (Hz)
-#     t = np.linspace(0, T, int(fs*T))
-
-#     # Generate chirp
-#     chirp_signal = np.sin(2 * np.pi * (f_start * t + 0.5 * (f_end - f_start) / T * t**2))
-
-#     # Plot
-#     plt.plot(t, chirp_signal)
-#     plt.xlabel("Time (s)")
-#     plt.ylabel("Amplitude")
-#     plt.title("Chirp Signal")
-#     plt.show()
-#     pass
 
 # # testing
 # create_enemy_signal()
