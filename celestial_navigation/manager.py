@@ -7,7 +7,6 @@ import star_matching as sm
 # also just close and open again after installation
 
 
-
 # image_with_stars, stars = sd.detection(example_path)
 # sgr = sm.Sagittarius()
 # sm.draw_constellation_on_image(image_with_stars, stars, sgr)
