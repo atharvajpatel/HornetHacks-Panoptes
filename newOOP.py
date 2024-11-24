@@ -5,6 +5,7 @@ import numpy as np
 from typing import List, Optional, Tuple
 from threading import Lock, Thread
 
+
 class Item:
     """
     Unified class representing equipment attached to a drone with threat/detection capabilities.
