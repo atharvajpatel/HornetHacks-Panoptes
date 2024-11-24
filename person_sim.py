@@ -170,6 +170,7 @@ def plot(person):
 plot(alice)
 plot(eve)
 
+# right now the plot only shows one by one. probably overlay them soon
 
 
 # def create_enemy_signal():
