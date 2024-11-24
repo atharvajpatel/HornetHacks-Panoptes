@@ -9,3 +9,4 @@ ephem
 pandas
 sklearn
 astroquery
+sklearn

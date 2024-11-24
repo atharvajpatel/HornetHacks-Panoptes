@@ -1,2 +1,0 @@
-Apikey_Astro = "tptrumddbxbjuehp"
-
