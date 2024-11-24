@@ -1,3 +1,4 @@
+
 import cv2
 import numpy as np
 from astropy.io import fits
@@ -7,15 +8,20 @@ from astropy.time import Time
 import astroquery
 from astroquery.astrometry_net import AstrometryNet
 from sklearn.neighbors import KDTree
+
+
 import pandas as pd
 from datetime import datetime
 import ephem
+
+catalog_path = "hipparcos.csv"
+
 
 class CelestialNavigator:
     def __init__(self, api_key):
         """
         Initialize the celestial navigation system.
-        
+        p
         Args:
             api_key (str): API key for astrometry.net
         """
@@ -32,11 +38,13 @@ class CelestialNavigator:
         # This is a simplified version - in practice, you'd want to load
         # actual star catalog data from a file or database
         # Format: RA (degrees), Dec (degrees), Magnitude
-        catalog = pd.DataFrame({
-            'ra': [],
-            'dec': [],
-            'magnitude': []
-        })
+        catalog = pd.read_csv(catalog_path)
+        print(hipparcos_data.head())
+        # catalog = pd.DataFrame({
+        #     'ra': [],
+        #     'dec': [],
+        #     'magnitude': []
+        # })
         return catalog
 
     def _build_star_tree(self):
@@ -67,35 +75,47 @@ class CelestialNavigator:
         except Exception as e:
             raise Exception(f"Error during plate solving: {str(e)}")
 
-    def detect_stars(self, image_path):
-        """
-        Detect stars in the image using OpenCV.
-        
-        Args:
-            image_path (str): Path to the image file
-            
-        Returns:
-            list: List of (x, y) coordinates for detected stars
-        """
-        # Read image
-        img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        
-        # Apply threshold to identify bright spots (stars)
-        _, thresh = cv2.threshold(img, 128, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        
-        # Find contours
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        # Calculate centroids of star blobs
+    
+
+    def detection(image_path):
+        # Load image
+        img = cv2.imread(image_path)
+
+        # Convert to grayscale image
+        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Set a threshold for brightness (here, set it to 150). originally 
+        ret, new = cv2.threshold(img_gray, 100, 255, cv2.THRESH_BINARY)
+
+        # The image is made up of white dots on a black background, so the outlines of the white dots are detected.
+        #detected_image, 
+        contours, hierarchy = cv2.findContours(new, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        # For each contour, find the center of gravity and put it into an array
         stars = []
-        for contour in contours:
-            M = cv2.moments(contour)
-            if M["m00"] != 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
-                stars.append((cx, cy))
-        
-        return stars
+        for cnt in contours:
+            M = cv2.moments(cnt)
+            if M['m00'] != 0: # if area is non-zero:
+                cx = int(M['m10'] / M['m00']) # m10 is the sum of x pixels in the contour. normalize by area
+                cy = int(M['m01'] / M['m00'])
+                # centroid coordinates
+                stars.append(np.array([cx, cy], dtype='int32'))
+            else:
+                # If the moment calculation fails, take the first point of the contour
+                stars.append(np.array(cnt[0][0], dtype='int32'))
+
+        # Return or print the array of star positions
+        #print(stars)
+
+        img_with_contours = img.copy()
+        cv2.drawContours(img_with_contours, contours, -1, (0, 255, 0), 2)  # Green contours with thickness 2
+
+        cv2.imshow("Image with Contours", img_with_contours)
+        cv2.waitKey(0) # press 0 to exit
+        cv2.destroyAllWindows()
+        return img_with_contours, stars
+
+
 
     def calculate_position(self, image_path, timestamp=None):
         """
@@ -120,7 +140,7 @@ class CelestialNavigator:
             wcs = self.plate_solve(image_path)
             
             # Detect stars in image
-            detected_stars = self.detect_stars(image_path)
+            detected_stars = self.detection(image_path)
             
             # Convert pixel coordinates to sky coordinates
             sky_coords = []
@@ -182,7 +202,7 @@ class CelestialNavigator:
         for star, cat_data in measurements:
             # Calculate position contribution from this star
             # This is a placeholder for actual astronomical calculations
-            star_weight = 1.0 / float(cat_data['magnitude'])
+            star_weight = 1.0 / float(cat_data['mag'])
             lat += star_weight * 0  # Replace with actual calculation
             lon += star_weight * 0  # Replace with actual calculation
             weight_sum += star_weight
@@ -196,12 +216,13 @@ class CelestialNavigator:
 # Example usage
 def main():
     # Initialize navigator with your astrometry.net API key
-    navigator = CelestialNavigator('your_api_key_here')
+    navigator = CelestialNavigator('')
     
     # Calculate position from an image
-    image_path = 'path_to_your_star_field_image.jpg'
+    #image_path = 'path_to_your_star_field_image.jpg'
+    example_path = "example_input.jpg"
     try:
-        latitude, longitude = navigator.calculate_position(image_path)
+        latitude, longitude = navigator.calculate_position(example_path)
         print(f"Estimated position: {latitude:.4f}°N, {longitude:.4f}°E")
     except Exception as e:
         print(f"Error: {str(e)}")
