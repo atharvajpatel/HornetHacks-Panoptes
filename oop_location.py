@@ -5,6 +5,8 @@ from threading import Lock
 import socket
 import json
 import threading
+import argparse
+import ssl
 
 class AirDefenseSystem:
     def __init__(self, name: str, x: float, y: float, yaw: float):
@@ -165,7 +167,7 @@ class Drone:
             return "NW"
 
 class DefenseMap:
-    def __init__(self, host='localhost', port=12345):
+    def __init__(self, host='0.0.0.0', port=12345):
         self.defense_systems: List[AirDefenseSystem] = []
         self.drones: List[Drone] = []
         self.socket_host = host
@@ -185,22 +187,17 @@ class DefenseMap:
         print(f"Added new drone: {drone.name} at ({latitude}, {longitude})")
 
     def start_socket_server(self):
-        """Starts the socket server to listen for position updates."""
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((self.socket_host, self.socket_port))
-        server_socket.listen(1)
+        server_socket.listen(5)
         print(f"Socket server listening on {self.socket_host}:{self.socket_port}")
-
+        
         while self.running:
             try:
                 client_socket, address = server_socket.accept()
                 print(f"Connection from {address}")
-                
-                # Start a new thread to handle this client
-                client_thread = threading.Thread(
-                    target=self.handle_client,
-                    args=(client_socket,)
-                )
+                client_thread = threading.Thread(target=self.handle_client, args=(client_socket,))
                 client_thread.start()
             except Exception as e:
                 print(f"Error accepting connection: {e}")
@@ -258,8 +255,12 @@ class DefenseMap:
             print("  Status: INSIDE DANGER ZONE!" if data['status'] else "  Status: OUTSIDE DANGER ZONE!")
 
 def main():
-    # Create defense map with socket server
-    defense_map = DefenseMap()
+    parser = argparse.ArgumentParser(description="Defense Map Server")
+    parser.add_argument('--host', default='0.0.0.0', help='Host to bind the server to')
+    parser.add_argument('--port', type=int, default=12345, help='Port to listen on')
+    args = parser.parse_args()
+
+    defense_map = DefenseMap(host=args.host, port=args.port)
     
     # Add initial defense systems with local Cartesian coordinates and yaw angles
     defense_map.add_defense_system("SAM Site Alpha", 10.0, 15.0, math.radians(45))  # 45° rotation
