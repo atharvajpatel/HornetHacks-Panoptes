@@ -5,12 +5,8 @@ from threading import Lock
 import socket
 import json
 import threading
-<<<<<<< Updated upstream
 import argparse
-import ssl
-=======
 from analyzeImage import xyz_cartesian
->>>>>>> Stashed changes
 
 class AirDefenseSystem:
     def __init__(self, name: str, x: float, y: float, yaw: float):
@@ -267,10 +263,7 @@ def main():
     defense_map = DefenseMap(host=args.host, port=args.port)
     
     # Add initial defense systems with local Cartesian coordinates and yaw angles
-    defense_map.add_defense_system("SAM Site Alpha", 10.0, 15.0, math.radians(45))  # 45° rotation
-    defense_map.add_defense_system("SAM Site Beta", -5.0, 20.0, math.radians(90))   # 90° rotation
-    defense_map.add_defense_system("SAM Site Gamma", 8.0, -12.0, math.radians(30))  # 30° rotation
-    
+    defense_map.add_defense_system("SAM Site Alpha", xyz_cartesian[0], xyz_cartesian[1], math.radians(45))  # 45° rotation
     # Add drones
     defense_map.add_drone("Drone-1")
     defense_map.add_drone("Drone-2", 34.0, -118.0)
