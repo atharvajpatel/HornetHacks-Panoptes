@@ -1,6 +1,11 @@
 # imports
 import numpy as np
 
+
+grid_dimensions = 200
+heatmap_width = 64
+base_heat = 37
+
 class Person:
     def __init__(self, name, is_ally):
         """
@@ -12,7 +17,14 @@ class Person:
         """
         self.id = name
         self.ally = is_ally
+        #self.heatmap = np.zeros((heatmap_width, heatmap_width))
         self.radio_signals = []
+        self.x = np.random.uniform(0, grid_dimensions)
+        self.y = np.random.uniform(0, grid_dimensions)
+        #self.base_heat = 37 # human body temperature in celsius
+        self.temperature = base_heat
+        self.environmental_temp = 25
+
 
     def generate_radio_signal(self, duration=1.0, sampling_rate=1000):
         """
@@ -46,38 +58,107 @@ class Person:
         
         # Store the signal
         self.radio_signals.append(signal)
-        return signal
+        return self.radio_signals
 
-    def status(self):
-        """Return the status of the person (Enemy or Ally)."""
-        return "Ally" if self.ally else "Enemy"
+    
+    
+    def emit_heat(self, activity_level=1.0, environment_temp=25):
+        """
+        Simulate the heat emitted by the person.
 
+        Args:
+            activity_level (float): Multiplier for physical activity (1.0 = normal, >1.0 = higher activity, <1.0 = lower).
+            environment_temp (float): The ambient temperature in degrees Celsius.
+
+        Returns:
+            float: The heat emitted in degrees Celsius.
+        """
+        # Heat generation depends on base heat, activity level, and environmental temperature
+        metabolic_heat = base_heat * activity_level
+        environmental_effect = 0.1 * (base_heat - environment_temp) # probably cools the person down
+        noise = np.random.normal(0, 0.5)  # Add some randomness to simulate real-world variation
+        # Total heat emission
+        total_heat = metabolic_heat + environmental_effect + noise
+        self.temperature = total_heat
+        
+    
+    def walk(self, environment_temp=25):
+        """
+        Simulate the person walking, increasing their activity level.
+
+        Args:
+            environment_temp (float): The ambient temperature in degrees Celsius.
+
+        Returns:
+            float: The heat emitted during walking.
+        """
+        intensity = 1.5  # Walking increases activity level
+        x_step = np.random.uniform(1, 5)
+        y_step = np.random.uniform(1, 5)
+        self.x += x_step
+        self.y += y_step
+        self.emit_heat(activity_level=intensity, environment_temp=environment_temp)
+
+
+
+    def rest(self, environment_temp=25):
+        """
+        Simulate the person resting, decreasing their activity level.
+
+        Args:
+            environment_temp (float): The ambient temperature in degrees Celsius.
+
+        Returns:
+            float: The heat emitted during resting.
+        """
+        intensity = 0.8  # Resting decreases activity level
+        self.emit_heat(activity_level=intensity, environment_temp=environment_temp)
+
+
+    
     def __str__(self):
         """String representation of the person."""
-        return f"Person(name={self.id}, status={self.status()})"
+        status = "Ally" if self.ally else "Enemy"
+        summary = (f"Person {self.id} is located at {self.x}, {self.y}. They are an {status}. The temperature is {self.temperature}")
+        return summary
+    
+    
 
 # Example usage
-if __name__ == "__main__":
-    # Create instances of Person
-    alice = Person("Alice", is_ally=True)
-    eve = Person("Eve", is_ally=False)
+# Create instances of Person
+alice = Person("Alice", is_ally=True)
+alice.walk()
+eve = Person("Eve", is_ally=False) # eve is an enemy
+eve.rest()
+signal_alice = alice.generate_radio_signal(duration=2.0)
+signal_eve = eve.generate_radio_signal(duration=2.0)
 
-    # Generate radio signals
-    signal_alice = alice.generate_radio_signal(duration=2.0)
-    signal_eve = eve.generate_radio_signal(duration=2.0)
 
-    # Display details
-    print(alice)
-    print(eve)
+# Generate radio signals
 
-    # Optionally plot the signals
-    import matplotlib.pyplot as plt
+# Display details
+print(alice)
+print(eve)
 
-    t = np.linspace(0, 2.0, 2000, endpoint=False)  # Time array for plotting
+# print(eve.radio_signals[0])
+# print(len(eve.radio_signals[0]))
+
+
+
+
+
+import matplotlib.pyplot as plt
+
+def plot(person):
+    signal = person.radio_signals[0]
+    duration = 2
+    t = np.linspace(0, duration, len(signal), endpoint=False)  # Time array for plotting. x axis
+    #print(len(t))
+    #print(len(person.radio_signals[0]))
     plt.figure(figsize=(10, 6))
+    plt.plot(t, signal, label=person.id+str(person.ally))
 
-    plt.plot(t, signal_alice, label="Alice (Ally)")
-    plt.plot(t, signal_eve, label="Bob (Enemy)")
+    #plt.plot(t, person.radio_signals[0], label="Eve (Enemy)")
     plt.legend()
     plt.xlabel("Time (s)")
     plt.ylabel("Signal Amplitude")
@@ -85,6 +166,9 @@ if __name__ == "__main__":
     plt.grid()
     plt.show()
 
+
+plot(alice)
+plot(eve)
 
 
 
