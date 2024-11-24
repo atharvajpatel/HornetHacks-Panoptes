@@ -277,7 +277,13 @@ class DroneCamera:
 #                            drone_xyz=drone_xyz,
 #                            drone_roll=drone_roll, drone_pitch=drone_pitch, drone_yaw=drone_yaw)
 
+# This will return two objects: np.array([x, y, z]), representing the coordinates of the drone,
+# and a numpy array np.array([v_x, v_y, v_z]), representing the direction of the ray passing the drone.
+# (array([100.   0. 100.]), array([ 0.70127654, -0.04217534, -0.71164068]))
+
 # And you can also get the intersection of the ray with the ground plane
 # droneCam.backproject_point_to_local_ground(pixel_coords=pixel_coords,
 #                            drone_xyz=drone_xyz,
 #                            drone_roll=drone_roll, drone_pitch=drone_pitch, drone_yaw=drone_yaw)
+# This will return a single np.array([x, y]), representing the point on the ground 
+# that the pixel in the image corresponds to.
