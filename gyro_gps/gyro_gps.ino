@@ -6,6 +6,7 @@ License: MIT
 #include "Arduino.h"
 #include <MPU6050_light.h>
 #include "HT_TinyGPS++.h"
+#include "HT_st7735.h"
 
 // CONSTS
 #define MPU_DELAY_TIME 10 // in ms
@@ -16,6 +17,7 @@ License: MIT
 // OBJECTS
 MPU6050 mpu(Wire);
 TinyGPSPlus GPS;
+HT_st7735 st7735;
 
 // GLOBALS
 unsigned long timer1 = 0;
@@ -38,12 +40,23 @@ void GPS_send(void)
       {
         return;
       }
+#if DEBUG_MODE
       Serial.printf(" %02d:%02d:%02d.%02d",GPS.time.hour(),GPS.time.minute(),GPS.time.second(),GPS.time.centisecond());
       Serial.print("LAT: ");
       Serial.print(GPS.location.lat(), 6);
       Serial.print(", LON: ");
       Serial.print(GPS.location.lng(), 6);
       Serial.println();
+#endif
+      st7735.st7735_fill_screen(ST7735_BLACK);
+      st7735.st7735_write_str(0, 0, (String)"GPS_test");
+      String time_str = (String)GPS.time.hour() + ":" + (String)GPS.time.minute() + ":" + (String)GPS.time.second()+ ":"+(String)GPS.time.centisecond();
+      st7735.st7735_write_str(0, 20, time_str);
+      String latitude = "LAT: " + (String)GPS.location.lat();
+      st7735.st7735_write_str(0, 40, latitude);
+      String longitude  = "LON: "+  (String)GPS.location.lng();
+      st7735.st7735_write_str(0, 60, longitude);
+      
       while(Serial1.read()>0);
     }
   }
@@ -68,6 +81,14 @@ void setup() {
   pinMode(VGNSS_CTRL,OUTPUT);
   digitalWrite(VGNSS_CTRL,HIGH);
   Serial1.begin(115200,SERIAL_8N1,33,34);
+
+  // TFT Setup
+  st7735.st7735_init();
+  delay(100);
+  st7735.st7735_fill_screen(ST7735_BLACK);
+  delay(100);
+  st7735.st7735_write_str(0, 0, (String)"GPS_test");
+  
 #if DEBUG_MODE
   Serial.println("GPS_test");
 #endif
