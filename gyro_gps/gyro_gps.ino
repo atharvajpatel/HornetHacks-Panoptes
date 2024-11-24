@@ -21,6 +21,7 @@ TinyGPSPlus GPS;
 unsigned long timer1 = 0;
 unsigned long timer2 = 0;
 const float deg_to_rad = PI / 180;
+float altitude_sens = 0; // Set to a constant since no altitude sensor
 
 void GPS_send(void)
 {
@@ -85,7 +86,9 @@ void loop() {
 #else
     Serial.print(GPS.location.lat(), 6);
     Serial.print(",");
-    Serial.print(GPS.location.lon(), 6);
+    Serial.print(GPS.location.lng(), 6);
+    Serial.print(",");
+    Serial.print(altitude_sens, 6);
     Serial.print(",");
     Serial.print(mpu.getAngleX()* deg_to_rad, 6);
     Serial.print(",");
@@ -95,7 +98,7 @@ void loop() {
 #endif
     timer1 = millis();
   }
-  if ((current_time - timer2) > GPS_DELAY_TIME) { // print data every 10ms
+  if ((current_time - timer2) > GPS_DELAY_TIME) { // print data every 5s
     GPS_send();
     timer2 = millis();
   }
