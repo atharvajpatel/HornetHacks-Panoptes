@@ -1,3 +1,10 @@
 transformers
 matplotlib
 pillow
+astropy
+numpy
+datetime
+ephem
+pandas
+sklearn
+astroquery
