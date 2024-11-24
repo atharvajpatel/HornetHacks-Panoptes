@@ -60,7 +60,7 @@ class Drone:
         
         for ads in defense_systems:
             distance_to_danger, bearing = self._calculate_distance_and_bearing(ads)
-              
+            
             # Update nearest ADS if this is the closest one
             if distance_to_danger < closest_distance:
                 closest_distance = distance_to_danger
