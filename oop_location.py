@@ -258,8 +258,8 @@ class DefenseMap:
 
 def main():
     parser = argparse.ArgumentParser(description="Defense Map Server")
-    parser.add_argument('--host', default='0.0.0.0', help='Host to bind the server to')
-    parser.add_argument('--port', type=int, default=12345, help='Port to listen on')
+    parser.add_argument('--host', default='10.33.1.184', help='Host to bind the server to')
+    parser.add_argument('--port', type=int, default=5000, help='Port to listen on')
     args = parser.parse_args()
 
     defense_map = DefenseMap(host=args.host, port=args.port)

@@ -26,7 +26,7 @@ def send_drone_data(host, port, data):
 # Example usage
 if __name__ == "__main__":
     host = '10.33.0.210'  # Replace with your server's IP address or hostname
-    port = 12345  # Replace with your server's port if different
+    port = 5000  # Replace with your server's port if different
     coords = receive_coords.ReceiveCoords()
 
     # Define some sample drone data (latitude, longitude, yaw)
