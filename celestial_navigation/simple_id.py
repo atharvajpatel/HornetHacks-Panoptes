@@ -26,9 +26,11 @@ class ZenithCelestialNavigator:
             'Betelgeuse': (88.79, 7.41, 0.42),    # Alpha Orionis
             'Rigel': (78.63, -8.20, 0.12),        # Beta Orionis
             'Bellatrix': (81.28, 6.35, 1.64),     # Gamma Orionis
+            
             'Mintaka': (83.00, -0.30, 2.23),      # Delta Orionis
             'Alnilam': (84.05, -1.20, 1.69),      # Epsilon Orionis
             'Alnitak': (85.19, -1.94, 1.88),      # Zeta Orionis
+            
             'Saiph': (86.94, -9.67, 2.06)         # Kappa Orionis
         }
         
@@ -110,7 +112,16 @@ class ZenithCelestialNavigator:
                 stars.append((x, y, brightness))
         
         # Sort by brightness
-        return sorted(stars, key=lambda x: x[2], reverse=True)
+        stars_sorted = sorted(stars, key=lambda x: x[2], reverse=True)
+        annotated_img = img.copy()
+        for star in stars_sorted:
+            x, y, brightness = star
+            cv2.circle(annotated_img, (int(x), int(y)), 5, (0, 255, 0), 2)  # Green circles for stars
+        cv2.imshow("image with stars", annotated_img)
+        cv2.waitKey(0) # press 0 to exit
+        cv2.destroyAllWindows()
+        return stars_sorted
+    
 
     def detect_stars(self, image_path, threshold=128):
         """
@@ -151,9 +162,9 @@ class ZenithCelestialNavigator:
     
 
 
-    def identify_orion_improved(self, stars, image_shape, belt_width_range=(0.15, 0.4)):
+    def identify_orion_improved(self, stars, image_shape, belt_width_range=(0.05, 0.6)):
         """
-        Improved Orion identification with parameters tuned for typical night sky photos.
+        Fixed Orion identification focusing on the actual star pattern.
         
         Args:
             stars: List of (x, y, brightness) tuples
@@ -161,15 +172,17 @@ class ZenithCelestialNavigator:
             belt_width_range: (min, max) range for belt width as fraction of image width
         """
         if len(stars) < 5:
+            print("not enough stars")
             return None
             
         height, width = image_shape[:2]
-        bright_stars = stars[:20]  # Consider more stars for better detection
+        # Consider all provided stars since the belt stars aren't necessarily the brightest
+        bright_stars = stars
         
         def calc_distance(p1, p2):
             return np.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
         
-        def is_roughly_collinear(p1, p2, p3, tolerance_degrees=20):  # Increased tolerance
+        def is_roughly_collinear(p1, p2, p3, tolerance_degrees=35):  # Increased tolerance
             v1 = np.array([p1[0] - p2[0], p1[1] - p2[1]])
             v2 = np.array([p3[0] - p2[0], p3[1] - p2[1]])
             
@@ -182,19 +195,28 @@ class ZenithCelestialNavigator:
             angle = np.degrees(np.arccos(np.clip(dot_product / norms, -1.0, 1.0)))
             return abs(180 - angle) < tolerance_degrees
         
-        # Find belt candidates with relaxed constraints
         best_belt = None
         best_belt_score = float('inf')
         
-        min_belt_width = belt_width_range[0] * width
-        max_belt_width = belt_width_range[1] * width
+        # Use the provided bounds
+        min_belt_width = 0.02 * width
+        max_belt_width = 0.9 * width
         
-        for i in range(len(bright_stars) - 2):
-            for j in range(i + 1, len(bright_stars) - 1):
-                for k in range(j + 1, len(bright_stars)):
+        for i in range(len(bright_stars)):
+            for j in range(len(bright_stars)):
+                if i == j:
+                    continue
+                for k in range(len(bright_stars)):
+                    if k == i or k == j:
+                        continue
+                        
                     p1 = np.array(bright_stars[i][:2])
                     p2 = np.array(bright_stars[j][:2])
                     p3 = np.array(bright_stars[k][:2])
+                    
+                    # Basic sanity check - points should be different
+                    if np.allclose(p1, p2) or np.allclose(p2, p3) or np.allclose(p1, p3):
+                        continue
                     
                     if not is_roughly_collinear(p1, p2, p3):
                         continue
@@ -203,22 +225,26 @@ class ZenithCelestialNavigator:
                     d2 = calc_distance(p2, p3)
                     belt_length = d1 + d2
                     
-                    # Check if belt length is within expected range
                     if not (min_belt_width <= belt_length <= max_belt_width):
                         continue
                     
-                    # Check spacing ratio with more tolerance
+                    # Relaxed spacing ratio
                     spacing_ratio = d1/d2 if d2 > 0 else float('inf')
-                    if not (0.4 < spacing_ratio < 2.5):  # More tolerant ratio
+                    if not (0.3 < spacing_ratio < 3.0):
                         continue
                     
-                    # Score based on collinearity and spacing
+                    # Score based primarily on geometric arrangement
                     angle_score = abs(180 - np.degrees(np.arccos(np.clip(np.dot(
                         p3 - p2, p2 - p1) / (np.linalg.norm(p3 - p2) * np.linalg.norm(p2 - p1)),
                         -1.0, 1.0))))
-                    spacing_score = abs(1 - spacing_ratio)
-                    brightness_score = abs(bright_stars[i][2] - bright_stars[j][2]) + abs(bright_stars[j][2] - bright_stars[k][2])
-                    total_score = angle_score + spacing_score + brightness_score * 0.1
+                        
+                    # Add a slight preference for brighter stars but don't make it dominant
+                    brightness_score = (1000 - (bright_stars[i][2] + bright_stars[j][2] + bright_stars[k][2])) / 1000
+                    
+                    # Prefer middle ranges of belt length
+                    length_score = abs(0.5 - (belt_length / max_belt_width))
+                    
+                    total_score = angle_score + length_score * 10 + brightness_score * 5
                     
                     if total_score < best_belt_score:
                         best_belt_score = total_score
@@ -228,23 +254,21 @@ class ZenithCelestialNavigator:
                             'brightness': [bright_stars[i][2], bright_stars[j][2], bright_stars[k][2]]
                         }
         
-        if not best_belt or best_belt_score > 30:  # More tolerant threshold
+        if not best_belt:
             return None
         
-        # Find Betelgeuse and Rigel with improved criteria
+        # Rest of the function remains the same...
         belt_center = np.mean(best_belt['stars'], axis=0)
         belt_vector = best_belt['stars'][2] - best_belt['stars'][0]
         belt_normal = np.array([-belt_vector[1], belt_vector[0]])
         belt_length = np.linalg.norm(belt_vector)
         
-        # Look for bright stars at expected distances
         candidates = []
         for star in bright_stars:
             if all(not np.allclose(star[:2], belt_star) for belt_star in best_belt['stars']):
                 pos = np.array(star[:2])
                 dist_to_belt = abs(np.dot(pos - belt_center, belt_normal)) / np.linalg.norm(belt_normal)
                 relative_dist = dist_to_belt / belt_length
-                # Expect Betelgeuse and Rigel to be 0.8-1.5 times the belt length away
                 if 0.6 < relative_dist < 1.8:
                     candidates.append((star, dist_to_belt, np.dot(pos - belt_center, belt_normal) > 0))
         
@@ -257,7 +281,7 @@ class ZenithCelestialNavigator:
         betelgeuse = upper_stars[0][0]
         rigel = lower_stars[0][0]
         
-        confidence = (1 - (best_belt_score / 30)) * min(1.0, len(candidates) / 5)
+        confidence = min(1.0, len(candidates) / 5)
         
         return {
             'belt_stars': best_belt['stars'],
@@ -265,76 +289,6 @@ class ZenithCelestialNavigator:
             'rigel': (rigel[0], rigel[1]),
             'confidence': confidence
         }
-
-    def identify_orion(self, stars, image_shape):
-        """
-        Identify Orion constellation from detected stars.
-        
-        Args:
-            stars: List of (x, y, brightness) tuples
-            image_shape: Shape of the original image
-            
-        Returns:
-            dict: Identified Orion stars and confidence score
-        """
-        if len(stars) < 7:  # Minimum stars needed for Orion
-            return None
-        
-        # Convert to normalized coordinates
-        height, width = image_shape[:2]
-        norm_stars = [(x/width, y/height, b) for x, y, b in stars]
-        
-        # Find brightest stars that could form Orion's pattern
-        candidates = norm_stars[:15]  # Take top 15 brightest stars
-        
-        # Try to match Orion's pattern
-        best_match = None
-        best_score = 0
-        
-        # Function to calculate angle between vectors
-        def vector_angle(v1, v2):
-            dot = v1[0]*v2[0] + v1[1]*v2[1]
-            mags = math.sqrt(v1[0]**2 + v1[1]**2) * math.sqrt(v2[0]**2 + v2[1]**2)
-            return math.acos(max(min(dot/mags, 1), -1))
-        
-        # Try each possible combination of bright stars
-        for i, (x1, y1, _) in enumerate(candidates):
-            for j, (x2, y2, _) in enumerate(candidates):
-                if i == j:
-                    continue
-                    
-                # Check if these could be Betelgeuse and Rigel (shoulder and foot)
-                vec1 = (x2-x1, y2-y1)
-                vec_len = math.sqrt(vec1[0]**2 + vec1[1]**2)
-                
-                if 0.3 < vec_len < 0.7:  # Expected relative distance
-                    # Look for belt stars
-                    potential_belt = []
-                    for k, (x3, y3, _) in enumerate(candidates):
-                        if k in (i, j):
-                            continue
-                        
-                        # Check if this star could be part of the belt
-                        vec2 = (x3-x1, y3-y1)
-                        angle = vector_angle(vec1, vec2)
-                        
-                        if 0.3 < angle < 0.7:  # Expected angle for belt
-                            potential_belt.append((x3, y3))
-                    
-                    # Need at least 3 stars for the belt
-                    if len(potential_belt) >= 3:
-                        # Calculate match score
-                        score = 1.0  # Base score
-                        best_match = {
-                            'Betelgeuse': (x1*width, y1*height),
-                            'Rigel': (x2*width, y2*height),
-                            'belt_stars': [(x*width, y*height) for x, y in potential_belt[:3]]
-                        }
-                        best_score = score
-        
-        if best_match and best_score > 0.5:
-            return best_match
-        return None
 
     def calculate_observer_position(self, image_path):
         """
@@ -431,30 +385,35 @@ def main():
     navigator = ZenithCelestialNavigator()
     
     # Process image
-    image = 'orion_1.jpg'
-    image_2 = 'orion_2.png'
+    image_0 = "orion_0.jpg"
+    image_1 = "orion_1.png"
+    image_2 = "orion_2.png"
 
-    img_2 = cv2.imread(image_2)
-    if img_2 is None:
+    demo_img = cv2.imread(image_1)
+    if demo_img is None:
         raise ValueError("Failed to load image outside function")
 
 
 
-    try:
+    #try:
         # Calculate position
 
-        detected_stars = navigator.detect_stars_improved(image_2)
-        identify_stars = navigator.identify_orion_improved("orion_2.png", detected_stars, img_2.shape)
-        print(identify_stars)
-        # x, y, z = navigator.calculate_observer_position(image_2)
-        # print(f"Observer position (x, y, z): ({x:.4f}, {y:.4f}, {z:.4f})")
-        
-        # # Visualize detection
-        # navigator.visualize_detection(image_2, 'detected_orion.jpg')
-        # print("Visualization saved as 'detected_orion.jpg'")
-        
-    except Exception as e:
-        print(f"Error: {str(e)}")
+
+    # # code for debugging
+    # detected_stars = navigator.detect_stars_improved(image_2)
+    # print(detected_stars)
+    # identify_stars = navigator.identify_orion_improved(detected_stars, demo_img.shape)
+    # print(identify_stars)
+
+    x, y, z = navigator.calculate_observer_position(image_2)
+    print(f"Observer position (x, y, z): ({x:.4f}, {y:.4f}, {z:.4f})")
+    
+    # Visualize detection
+    navigator.visualize_detection(image_2, 'detected_orion.jpg')
+    print("Visualization saved as 'detected_orion.jpg'")
+    
+# except Exception as e:
+#     print(f"Error: {str(e)}")
 
 if __name__ == "__main__":
     main()
