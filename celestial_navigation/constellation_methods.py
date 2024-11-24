@@ -1,0 +1,1 @@
+# input: angle, time
