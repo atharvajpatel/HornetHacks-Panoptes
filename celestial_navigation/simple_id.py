@@ -389,6 +389,8 @@ def main():
     image_1 = "orion_1.png"
     image_2 = "orion_2.png"
 
+    # check if the image can be read
+    # right now it only identifies orion_2.png successfully
     demo_img = cv2.imread(image_1)
     if demo_img is None:
         raise ValueError("Failed to load image outside function")
@@ -399,18 +401,34 @@ def main():
         # Calculate position
 
 
-    # # code for debugging
-    # detected_stars = navigator.detect_stars_improved(image_2)
-    # print(detected_stars)
-    # identify_stars = navigator.identify_orion_improved(detected_stars, demo_img.shape)
-    # print(identify_stars)
-
-    x, y, z = navigator.calculate_observer_position(image_2)
-    print(f"Observer position (x, y, z): ({x:.4f}, {y:.4f}, {z:.4f})")
+    # code for debugging
+    detected_stars = navigator.detect_stars_improved(image_1)
+    print(detected_stars)
+    orion_match = navigator.identify_orion_improved(detected_stars, demo_img.shape)
+    print("The results after identification:", orion_match)
+    #navigator.calculate_observer_position(image_2)
+    betelgeuse = np.array(orion_match['betelgeuse'])
+    belt_center = np.mean(orion_match['belt_stars'], axis=0)
     
-    # Visualize detection
-    navigator.visualize_detection(image_2, 'detected_orion.jpg')
-    print("Visualization saved as 'detected_orion.jpg'")
+    # Calculate orientation vector
+    orientation = belt_center - betelgeuse
+    angle = math.atan2(orientation[1], orientation[0])
+    
+    # Convert to celestial coordinates
+    # This is a simplified calculation for demo purposes
+    r = 1.0  # Unit sphere, (earth)
+    latitude = math.pi/2 - angle
+    longitude = math.atan2(orientation[1], orientation[0])
+    
+    x = r * math.cos(latitude) * math.cos(longitude)
+    y = r * math.cos(latitude) * math.sin(longitude)
+    z = r * math.sin(latitude)
+    
+    
+    #x, y, z = navigator.calculate_observer_position(image_2)
+    print(f"Observer position (x, y, z): ({x:.4f}, {y:.4f}, {z:.4f})")
+    return (x, y, z)
+    # # Visualize detection
     
 # except Exception as e:
 #     print(f"Error: {str(e)}")
