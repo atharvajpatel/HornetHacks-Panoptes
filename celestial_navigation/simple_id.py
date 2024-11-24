@@ -80,7 +80,7 @@ class ZenithCelestialNavigator:
         # Read image
         img = cv2.imread(image_path)
         if img is None:
-            raise Exception("Failed to load image")
+            raise Exception("Failed to load image within function")
         
         # Convert to grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -436,14 +436,14 @@ def main():
 
     img_2 = cv2.imread(image_2)
     if img_2 is None:
-        raise ValueError("Failed to load image. Please check the file path or format.")
+        raise ValueError("Failed to load image outside function")
 
 
 
     try:
         # Calculate position
 
-        detected_stars = navigator.detect_stars(image_2)
+        detected_stars = navigator.detect_stars_improved(image_2)
         identify_stars = navigator.identify_orion_improved("orion_2.png", detected_stars, img_2.shape)
         print(identify_stars)
         # x, y, z = navigator.calculate_observer_position(image_2)
